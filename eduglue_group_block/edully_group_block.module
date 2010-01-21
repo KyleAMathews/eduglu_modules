@@ -1,0 +1,11 @@
+<?php 
+
+// Eventually we'll do something custom. For now, we'll just clean things up
+// some with javascript.
+/*
+ * Implementaiton of hook_init().
+ */
+function edully_group_block_init() {
+  drupal_add_js(drupal_get_path('module', 'edully_group_block') . "/edully_group_block.js");
+  drupal_add_css(drupal_get_path('module', 'edully_group_block') . "/edully_group_block.css");
+}

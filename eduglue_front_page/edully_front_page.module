@@ -1,0 +1,186 @@
+<?php 
+
+/**
+ * Implementation of hook_menu.
+ */
+function edully_front_page_menu () {
+  $items['frontpage'] = array(
+    'title' => 'Learning Through Conversations',
+    'description' => t('Generates front page for Edully sites'),
+    'page callback' => 'edully_front_page_frontpage',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/*
+ * Implementaiton of hook_init().
+ */
+function edully_front_page_init() {
+  drupal_add_js(drupal_get_path('module', 'edully_front_page') . "/edully_front_page.js");
+}
+/*
+ * Generates front page for Edully sites
+ */
+function edully_front_page_frontpage() {
+  global $user;
+  if (!$user->uid) { // User is anonymous.
+    $out .= edully_front_page_marketing_stuff();
+    // Generate hot conversation list;
+    $out .= edully_front_page_hot_conversations();
+    return $out;  
+  }
+  else {
+    $out .= edully_front_page_hot_conversations(true);
+    $out .= "<hr";
+    $out .= "<h2>Latest activity in my groups</h2>";
+    $out .= views_embed_view('og_unread', $display_id = 'page');
+    return $out;
+  }
+  
+}
+
+function edully_front_page_marketing_stuff() {
+  $out = <<<TABLE
+  <table id='front-page-marketing'>
+  <tr>
+  <td id="front-teachers">
+    <div>
+      <h2>Teachers</h2>
+        <ul>
+          <li>Incorporate active learning in your classroom</li>
+          <li>Integrate student-to-student learning groups</li>
+          <li>Build student-driven knowledge repositories for your topic</li>
+        </ul>
+        <br />
+        <p class="join-now"><a href="user">Create a class group now!</a></p>
+    </div>
+  </td>
+    
+  <td id="front-students">
+    <div>
+      <h2>Students</h2>
+        <ul>
+          <li>Join <a href="groups">groups</a> for your interests</li>
+          <li>Get help on projects</li>
+          <li>Connect to people in your major (<a href="content/island-major-groups">See if there's a group yet for your major</a>)</li>
+        </ul>
+        <br />
+        <br />
+        <br />
+        <p class="join-now"><a href="user">Join now with your Route Y ID!</a></p>
+    </div>
+  </td>
+  
+  <td id="front-alumni">
+    <div>
+      <h2>Alumni</h2>
+        <ul>
+          <li>Connect with friends from school</li>
+          <li>Keep up-to-date on latest advances in your field</li>
+          <li>Find students to recruit to your firm</li>
+        </ul>
+        <br />
+        <br />
+        <br />
+        <p class="join-now"><a href="user">Join now with your Route Y ID!</a></p>
+    </div>
+  </td>
+  </tr>
+  </table>
+TABLE;
+  
+  return $out;
+}
+
+function edully_front_page_hot_conversations($hide_half = false) {
+  // Query for non-private nodes created in past three days.
+  $six_days_seconds = 518400;
+  $query = "SELECT g.group_nid, n.nid, n.title, n.created, ns.comment_count, n.uid
+  FROM node_comment_statistics ns join node n ON n.nid = ns.nid
+  JOIN og_access_post a ON a.nid = n.nid
+  JOIN og_ancestry g ON n.nid = g.nid
+  WHERE a.og_public = 1 AND
+  ns.comment_count != 0 AND
+  n.status = 1 AND
+  n.created > (UNIX_TIMESTAMP() - %d)
+  GROUP BY n.nid
+  ORDER BY n.created desc";
+  $results = db_query($query, $six_days_seconds);
+  
+  $conversations = array();
+  while ($data = db_fetch_array($results)) {
+    // Convert data into hours before now.
+    $data['created'] = (time() - $data['created']) / 3600;
+    $conversations[] = $data;
+  }
+  
+  // Add group names and load user object.
+  foreach($conversations as &$talk) {
+    $results = db_query("SELECT n.nid, n.title as name
+                        FROM og_ancestry o JOIN node n ON n.nid = o.group_nid
+                        WHERE o.nid = %d", $talk['nid']);
+    $names = array();
+    while ($data = db_fetch_array($results)) {
+      $names[$data['nid']] = l($data['name'], "node/". $data['nid'], array('attributes' => array('class' => 'group-link')));
+    }
+    $talk['group_names'] = $names;
+    
+    $talk['user'] = user_load(array('uid' => $talk['uid']));
+  }
+  
+  // Calculate points.
+  # 5 points for each comment
+  foreach($conversations as &$talk) {
+    $talk['points'] = $talk['comment_count'] * 5;
+  }
+  
+  // Calculate decay based on 12 hour half-life. Add twelve to all hour totals
+  // so new discussions don't rise to the top unfairly.
+  foreach($conversations as &$talk) {
+     $talk['real_points'] = $talk['points'] / (pow($talk['created'] + 12, 1.5) / 24);
+  }
+  
+  // Order by real points;
+  usort($conversations, "edully_front_page_sort");
+  //dpm($conversations);
+  
+  // Limit to 10.
+  $conversations = array_slice($conversations, 0, 10);  
+  
+  return theme_edully_front_page($conversations, $hide_half);
+}
+
+function edully_front_page_sort($a, $b) {
+  if ($a['real_points'] == $b['real_points']) {
+    return 0;
+  }
+  
+  return ($a['real_points'] < $b['real_points']) ? 1 : -1;
+}
+
+function theme_edully_front_page($conversations, $hide_half) {
+  global $user;
+  if (!$user->uid) {
+    $prepend =  "prepend-6";
+  }
+  $out .= "<div id='popular-conversations' class='" . $prepend . "'>";
+  $out .= "<h2>Popular Conversations On Island</h2>";
+  $out .= "<ol class='prepend-1 grey'>";
+  foreach ($conversations as $talk) {// TODO add link to group
+    $out .= "<li>" . l($talk['title'], "node/" . $talk['nid'], array(attributes => array('class' => 'black'))) .
+    " <span class='grey group-links'>(" . trim(implode(", ", $talk['group_names']), ",") . ")</span></li>";
+    
+    $out .= "     <span class='grey info-text'>" . /*$talk['points'] . " points*/" By " . theme('username', $talk['user']) . " " . round($talk['created'])
+      . " hours ago | " . $talk['comment_count'] . " comments</span></br >";
+  }
+  $out .= "</ol>";
+  if ($hide_half) {
+    $out .= "<p class='prepend-1 show-more'><span id='show-more-plus'>+</span>
+    <span id='show-more-help-text'>Show more popular conversations</span></p>";
+  }
+  $out .= "</div>";
+  
+  return $out;
+}
