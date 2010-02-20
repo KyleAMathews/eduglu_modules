@@ -1,6 +1,3 @@
-edully_group block is necessary evil until theme rewritten. It has js code to rework the island group create content block.
-search form for groups is in eduglue_discussion -- move to eduglue_solr_search
-
 // Fix outgoing emails, get feature menu working, logout, set variable to make the primary menu use the feature menu
 * set frontpage as the homepage
 * Comment settings -- do this inside features w/ strongarm
