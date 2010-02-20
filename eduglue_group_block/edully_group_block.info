@@ -1,6 +1,0 @@
-name = Edully Custom Group Block
-description = Creates custom block for groups
-package = Custom Island Modules 
-dependencies[] = og
-core = 6.x
-version = 6.x-1.x-dev
