@@ -1,6 +1,0 @@
-name = Edully Front Page
-description = Generates front page for Edully sites
-package = Custom Island Modules
-dependencies[] = context
-core = 6.x
-version = 6.x-1.x-dev
