@@ -1,0 +1,111 @@
+<?php
+
+/**
+ * Implementation of hook_init().
+ */
+function top_bar_init() {
+  drupal_add_css(drupal_get_path('module', 'top_bar') . "/top_bar.css");
+  drupal_add_js(drupal_get_path('module', 'top_bar') . "/top_bar.js");
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function top_bar_theme() {
+  return array(
+    'top_bar' => array(
+      'template' => 'top_bar',
+      'arguments' => array(
+        'user' => null,
+      ),
+    ),
+    'top_bar_your_groups' => array(
+      'template' => 'top_bar_your_groups',
+      'arguments' => array(
+        'user' => null,
+      ),
+    ),
+  );
+}
+function top_bar_preprocess_page(&$vars) {
+  global $user;
+    $vars['top_bar'] = theme('top_bar', $user);
+}
+
+function template_preprocess_top_bar(&$vars) {
+  // Setup picture.
+  $preset = "20x20_crop";
+  $user = $vars['user'];
+  if (file_exists($user->picture)) {
+    $image = theme('imagecache', $preset, $user->picture);
+  }
+  else {
+    $default_image = variable_get('user_picture_default', '');
+    $image = theme("imagecache", $preset, $default_image);
+  }
+  $vars['user_image'] = $image;
+
+  // Secondary menu.
+  $menu = menu_navigation_links("secondary-links");
+  $vars['secondary_menu'] = theme('links', $menu);
+
+  // Set variables for the logo.
+  $default_theme = variable_get("theme_default", "");
+  $theme_settings = variable_get("theme_" . $default_theme  . "_settings", "");
+  $vars['logo'] = base_path() . $theme_settings['logo_path'];
+  $vars['site_name'] = variable_get('site_name', '');
+
+  // Set variables for profile dropdown.
+  $vars['profile'] = l(t('Profile'), 'user/' . $user->uid);
+  $vars['account_settings'] = l(t('Account settings'), 'user/' . $user->uid . '/edit');
+  $vars['logout'] = l(t('Log out'), 'logout');
+
+  $vars['your_groups'] = top_bar_prepare_your_groups();
+}
+
+function top_bar_prepare_your_groups() {
+  global $user;
+  
+  return theme('top_bar_your_groups', $user);
+}
+
+function template_preprocess_top_bar_your_groups(&$vars) {
+  $user = $vars['user'];
+  $results = db_query("SELECT p.value, n.title
+                      FROM {og_uid} o
+                      JOIN {purl} p
+                      JOIN {node} n
+                      WHERE o.nid = p.id
+                      AND o.nid = n.nid
+                      AND p.provider = 'spaces_og'
+                      AND o.uid = %d
+                      AND o.is_active = 1", $user->uid);
+  
+  $groups = array();
+  while ($data = db_fetch_array($results)) {
+    $groups[$data['value']] = $data['title'];
+  }
+  
+  // Sort the groups.
+  natcasesort($groups);
+  
+  foreach ($groups as $value => $group_title) {
+    $rows[] = l($group_title, $value, array('purl' => array('disabled' => TRUE)));
+  }
+  $vars['your_groups_links'] = theme('item_list', $rows);
+
+  $vars['browse_all_groups'] = l("Browse all groups", "og/all", array('attributes' => array('class' => 'grid-2')));
+  $vars['manage_memberships'] = l("Manage your group memberships", "og_mailinglist/subscriptions", array('attributes' => array('class' => 'grid-2')));
+  $vars['create_new_group'] = l("Create new group", "node/add/group", array('attributes' => array('class' => 'grid-2 create-new-group')));
+}
+
+function top_bar_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id=='search_theme_form') {
+    // Alter the default value of the textbox to "Search My Site" on page load.
+    $form['search_theme_form']['#default_value'] = 'Search';
+    // Add in some javascript events to change the text when the cursor is placed in the box.
+    $form['search_theme_form']['#attributes'] = array('onfocus' => "if (this.value == 'Search') {this.value = '';}" );
+    // Remove the title.
+    $form['search_theme_form']['#title'] = "";
+  }
+}

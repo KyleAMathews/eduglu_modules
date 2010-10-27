@@ -1,0 +1,3 @@
+name = Top Bar
+description = Provides a simple top-bar for navigating and controlling Eduglu.
+core = 6.x
