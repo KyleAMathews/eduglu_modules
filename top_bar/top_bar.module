@@ -53,10 +53,10 @@ function template_preprocess_top_bar(&$vars) {
   $default_theme = variable_get("theme_default", "");
   $theme_settings = variable_get("theme_" . $default_theme  . "_settings", "");
   if (!empty($theme_settings['logo_path'])) {
-    $vars['logo'] = base_path() . $theme_settings['logo_path'];
+    $vars['logo'] = $GLOBALS['base_url'] . base_path() . $theme_settings['logo_path'];
   }
   else {
-    $vars['logo'] = drupal_get_path('theme', $default_theme) . "/logo.png";
+    $vars['logo'] = $GLOBALS['base_url'] . base_path() . drupal_get_path('theme', $default_theme) . "/logo.png";
   }
 
   $vars['site_name'] = variable_get('site_name', '');
