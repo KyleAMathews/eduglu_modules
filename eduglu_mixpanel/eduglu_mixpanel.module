@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * Implementation of hook_init().
+ **/
+function eduglu_mixpanel_init() {
+  drupal_add_js(drupal_get_path('module', 'eduglu_mixpanel') . "/eduglu_mixpanel.js");
+}
