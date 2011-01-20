@@ -333,3 +333,10 @@
   float: right;
   padding: 10px 18px 10px 15px;  
 }
+
+.admin-menu #top-bar {
+  position: relative;
+}
+.admin-menu #page {
+  margin-top: 41px;
+}
