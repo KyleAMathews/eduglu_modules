@@ -21,5 +21,6 @@ Drupal.behaviors.click_expand_this_post = function(context) {
 Drupal.behaviors.click_group_settings = function(context) {
   $("#group-settings").bind('click', function(event) {
     mpq.push(["track", "click-group-settings"]);
+  });
 }
 
