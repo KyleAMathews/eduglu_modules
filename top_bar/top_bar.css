@@ -111,6 +111,7 @@
   padding-top:6px;
   width:240px;
 }
+#top-bar #search-form .form-text:focus,
 #top-bar #search-form .form-text:hover {
   background-color: #7697C2;
   color: #FFFFFF;
