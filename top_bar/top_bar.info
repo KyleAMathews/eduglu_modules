@@ -1,4 +1,4 @@
 name = Top Bar
 description = Provides a simple top-bar for navigating and controlling Eduglu.
 core = 6.x
-version = 6.x-1.0-alpha7
+version = 6.x-1.0-alpha8
