@@ -99,9 +99,9 @@ function template_preprocess_top_bar_your_groups(&$vars) {
   }
   $vars['your_groups_links'] = theme('item_list', $rows);
 
-  $vars['browse_all_groups'] = l("Browse all groups", "og/all", array('attributes' => array('class' => 'grid-2')));
-  $vars['manage_memberships'] = l("Manage your group memberships", "og_mailinglist/subscriptions", array('attributes' => array('class' => 'grid-2')));
-  $vars['create_new_group'] = l("Create new group", "node/add/group", array('attributes' => array('class' => 'grid-2 create-new-group')));
+  $vars['browse_all_groups'] = l("Browse all groups", "og/all", array('purl' => array('disabled' => TRUE), 'attributes' => array('class' => 'grid-2')));
+  $vars['manage_memberships'] = l("Manage your group memberships", "og_mailinglist/subscriptions", array('purl' => array('disabled' => TRUE), 'attributes' => array('class' => 'grid-2')));
+  $vars['create_new_group'] = l("Create new group", "node/add/group", array('purl' => array('disabled' => TRUE), 'attributes' => array('class' => 'grid-2 create-new-group')));
 }
 
 function top_bar_form_alter(&$form, $form_state, $form_id) {
