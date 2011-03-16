@@ -41,7 +41,7 @@
               </span>
               <?php print $your_groups ?>
             </div>
-            <?php } else { print l("login", "user", array('attributes' => array('id' => 'login-top-bar'))); } ?>
+            <?php } else { print l(t("login"), "user", array('attributes' => array('id' => 'login-top-bar'))); } ?>
             <span class="vr"></span>
           </div>
       </div>
