@@ -16,13 +16,13 @@ function top_bar_theme() {
     'top_bar' => array(
       'template' => 'top_bar',
       'arguments' => array(
-        'user' => null,
+        'user' => NULL,
       ),
     ),
     'top_bar_your_groups' => array(
       'template' => 'top_bar_your_groups',
       'arguments' => array(
-        'user' => null,
+        'user' => NULL,
       ),
     ),
   );
